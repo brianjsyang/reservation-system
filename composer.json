@@ -1,0 +1,18 @@
+{
+    "name": "brian/reservation-system",
+    "description": "Simulating restaurant reservation system with PHP/Laravel",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Brian\\ReservationSystem\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Brian Yang",
+            "email": "brianjsyang@gmail.com"
+        }
+    ],
+    "require": {}
+}
