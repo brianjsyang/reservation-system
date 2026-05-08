@@ -15,10 +15,31 @@ use InvalidArgumentException;
 
 final class TimeSlot
 {
-    public function __construct(private readonly DateTimeImmutable $start, private readonly int $durationInMinutes)
-    {
-        if (!$start || $durationInMinutes < 0) {
-            throw new InvalidArgumentException('Either Start is empty or Duration is not a valid input');
+    private readonly DateTimeImmutable $endsAt;
+
+    public function __construct(
+        private readonly DateTimeImmutable $startsAt,
+        private readonly int $durationInMinutes
+    ) {
+        if ($durationInMinutes < 1) {
+            throw new InvalidArgumentException('Duration must be at least 1 minutes');
         }
+
+        $this->endsAt = $startsAt->modify("+{$durationInMinutes} minutes");
+    }
+
+    public function startsAt(): DateTimeImmutable
+    {
+        return $this->startsAt;
+    }
+
+    public function endsAt(): DateTimeImmutable
+    {
+        return $this->endsAt;
+    }
+
+    public function durationInMinutes(): int
+    {
+        return $this->durationInMinutes;
     }
 }
