@@ -42,4 +42,16 @@ final class TimeSlot
     {
         return $this->durationInMinutes;
     }
+
+
+    /**
+     * Two TimeSlots are considred "overlapped" if:
+     * 1. $this->startsAt is LESS than $other->endsAt ($this starts before $other ends)
+     * 2. $this->endsAt is GREATER than $other->startsAt ($this ends after $other starts)
+     * 3. Adjacent slots (A ends exactly when B starts) is allowed (not an overlap)
+     */
+    public function overlaps(TimeSlot $other): bool
+    {
+        return $this->startsAt < $other->endsAt() && $this->endsAt > $other->startsAt();
+    }
 }
