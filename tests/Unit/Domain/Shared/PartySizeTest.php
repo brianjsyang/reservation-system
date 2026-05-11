@@ -15,7 +15,7 @@ final class PartySizeTest extends TestCase
     public function test_it_creates_a_valid_party_size(): void
     {
         $size = new PartySize(4);
-        $this->assertSame(4, $size->value());
+        $this->assertSame(4, $size->size());
     }
 
     // Data provider feeds multiple cases into one test method
@@ -24,7 +24,10 @@ final class PartySizeTest extends TestCase
         return [
             'zero'      => [0],
             'negative'  => [-1],
-            'too large' => [21]
+            'min'       => [PartySize::MIN],
+            'too small' => [PartySize::MIN - 1],
+            'max'       => [PartySize::MAX],
+            'too large' => [PartySize::MAX + 1],
         ];
     }
 
@@ -46,5 +49,11 @@ final class PartySizeTest extends TestCase
     {
         $res = (new PartySize(10))->equals(new PartySize(11));
         $this->assertFalse($res);
+    }
+
+    public function test_party_size_exceeds_other(): void
+    {
+        $res = (new PartySize(10))->exceeds(new PartySize(9));
+        $this->assertTrue($res);
     }
 }

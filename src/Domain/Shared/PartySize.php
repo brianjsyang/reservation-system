@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Reservations\Domain\Shared;
 
 use InvalidArgumentException;
+use Reservations\Domain\Shared\Exception\InvalidPartySizeException;
 
 /**
  * PartySize will be set up as value object
@@ -12,16 +13,23 @@ use InvalidArgumentException;
  */
 final class PartySize
 {
-    public function __construct(private readonly int $partySize)
+    public const MIN = 1;
+    public const MAX = 15;
+
+    public function __construct(private readonly int $size)
     {
-        if ($partySize < 1 || $partySize > 15) {
-            throw new InvalidArgumentException("Party size must be larger than 1 and less than 15. Inserted {$partySize}");
+        // Use custom domain specific exceptions
+        if ($size < self::MIN) {
+            throw InvalidPartySizeException::tooSmall($size, self::MIN);
+        }
+        if ($size > self::MAX) {
+            throw InvalidPartySizeException::tooLarge($size, self::MAX);
         }
     }
 
-    public function value(): int
+    public function size(): int
     {
-        return $this->partySize;
+        return $this->size;
     }
 
     /**
@@ -29,6 +37,14 @@ final class PartySize
      */
     public function equals(self $other): bool
     {
-        return $this->partySize === $other->partySize;
+        return $this->size === $other->size;
+    }
+
+    /**
+     * Comparison
+     */
+    public function exceeds(self $other): bool
+    {
+        return $this->size > $other->size;
     }
 }
