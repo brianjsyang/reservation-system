@@ -13,20 +13,37 @@ final class TimeSlot
     public const MIN_DURATION_MINUTES = 1;
     public const MAX_DURATION_MINUTES = 480;
 
-    private readonly DateTimeImmutable $endsAt;
-
     public function __construct(
         private readonly DateTimeImmutable $startsAt,
+        private readonly DateTimeImmutable $endsAt,
         private readonly int $durationInMinutes
-    ) {
+    ) {}
+
+    // Named Constructor Pattern - fake overloading with static factories.
+    // Reads like TimeSlot::of($sixPm, 60) // 6:00pm - 7:00pm
+    public function of(DateTimeImmutable $startsAt, int $durationInMinutes): self
+    {
         if ($durationInMinutes < self::MIN_DURATION_MINUTES) {
             throw InvalidTimeSlotException::tooShort($durationInMinutes, self::MIN_DURATION_MINUTES);
         }
         if ($durationInMinutes > self::MAX_DURATION_MINUTES) {
             throw InvalidTimeSlotException::tooLong($durationInMinutes, self::MAX_DURATION_MINUTES);
         }
+        return new self(
+            $startsAt,
+            $startsAt->modify("+{$durationInMinutes} minutes"),
+            $durationInMinutes,
+        );
+    }
 
-        $this->endsAt = $startsAt->modify("+{$durationInMinutes} minutes");
+    // Reads like TimeSlot::between($sixPm, $sevenPm) // 6:00pm - 7:00pm
+    public function between(DateTimeImmutable $startsAt, DateTimeImmutable $endsAt): self
+    {
+        if ($endsAt <= $startsAt) {
+            throw InvalidTimeSlotException::endsBeforeStart();
+        }
+        $duration = (int) (($endsAt->getTimestamp() - $startsAt->getTimestamp()) / 60);
+        return new self($startsAt, $endsAt, $duration);
     }
 
     public function startsAt(): DateTimeImmutable
