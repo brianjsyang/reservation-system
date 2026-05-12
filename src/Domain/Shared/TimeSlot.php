@@ -4,25 +4,26 @@ declare(strict_types=1);
 
 namespace Reservations\Domain\Shared;
 
+use BusinessHours;
 use DateTimeImmutable;
-use InvalidArgumentException;
-
-/**
- * Time Slot will be set up as value object
- * Any TimeSlot set at "7pm" is the same.
- * No need for identity
- */
+use Reservations\Domain\Shared\Exception\InvalidTimeSlotException;
 
 final class TimeSlot
 {
+    public const MIN_DURATION_MINUTES = 1;
+    public const MAX_DURATION_MINUTES = 480;
+
     private readonly DateTimeImmutable $endsAt;
 
     public function __construct(
         private readonly DateTimeImmutable $startsAt,
         private readonly int $durationInMinutes
     ) {
-        if ($durationInMinutes < 1) {
-            throw new InvalidArgumentException('Duration must be at least 1 minutes');
+        if ($durationInMinutes < self::MIN_DURATION_MINUTES) {
+            throw InvalidTimeSlotException::tooShort($durationInMinutes, self::MIN_DURATION_MINUTES);
+        }
+        if ($durationInMinutes > self::MAX_DURATION_MINUTES) {
+            throw InvalidTimeSlotException::tooLong($durationInMinutes, self::MAX_DURATION_MINUTES);
         }
 
         $this->endsAt = $startsAt->modify("+{$durationInMinutes} minutes");
@@ -43,6 +44,12 @@ final class TimeSlot
         return $this->durationInMinutes;
     }
 
+    public function equals(self $other): bool
+    {
+        // Key knowledge: For DateTimeImmutable, == will check VALUE; === will check OBJECT IDENTITY (same instance)
+        return $this->startsAt == $other->startsAt && $this->durationInMinutes && $other->durationInMinutes;
+    }
+
 
     /**
      * Two TimeSlots are considred "overlapped" if:
@@ -50,8 +57,18 @@ final class TimeSlot
      * 2. $this->endsAt is GREATER than $other->startsAt ($this ends after $other starts)
      * 3. Adjacent slots (A ends exactly when B starts) is allowed (not an overlap)
      */
-    public function overlaps(TimeSlot $other): bool
+    public function overlaps(self $other): bool
     {
-        return $this->startsAt < $other->endsAt() && $this->endsAt > $other->startsAt();
+        return $this->startsAt < $other->endsAt && $this->endsAt > $other->startsAt;
+    }
+
+
+    /**
+     * TimeSlot asks BusinessHours to check itself. (Tell-Don't-Ask)
+     * BusinessHours -knows- what "within" means, TimeSlot doesn't have to
+     */
+    public function isWithin(BusinessHours $hours): bool
+    {
+        return $hours->contains($this);
     }
 }
