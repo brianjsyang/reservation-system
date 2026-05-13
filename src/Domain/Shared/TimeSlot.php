@@ -21,7 +21,7 @@ final class TimeSlot
 
     // Named Constructor Pattern - fake overloading with static factories.
     // Reads like TimeSlot::of($sixPm, 60) // 6:00pm - 7:00pm
-    public function of(DateTimeImmutable $startsAt, int $durationInMinutes): self
+    public static function of(DateTimeImmutable $startsAt, int $durationInMinutes): self
     {
         if ($durationInMinutes < self::MIN_DURATION_MINUTES) {
             throw InvalidTimeSlotException::tooShort($durationInMinutes, self::MIN_DURATION_MINUTES);
@@ -37,7 +37,7 @@ final class TimeSlot
     }
 
     // Reads like TimeSlot::between($sixPm, $sevenPm) // 6:00pm - 7:00pm
-    public function between(DateTimeImmutable $startsAt, DateTimeImmutable $endsAt): self
+    public static function between(DateTimeImmutable $startsAt, DateTimeImmutable $endsAt): self
     {
         if ($endsAt <= $startsAt) {
             throw InvalidTimeSlotException::endsBeforeStart();
@@ -64,7 +64,7 @@ final class TimeSlot
     public function equals(self $other): bool
     {
         // Key knowledge: For DateTimeImmutable, == will check VALUE; === will check OBJECT IDENTITY (same instance)
-        return $this->startsAt == $other->startsAt && $this->durationInMinutes && $other->durationInMinutes;
+        return $this->startsAt == $other->startsAt && $this->durationInMinutes == $other->durationInMinutes;
     }
 
 
