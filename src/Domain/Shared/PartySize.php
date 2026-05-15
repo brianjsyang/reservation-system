@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Reservations\Domain\Shared;
 
-use InvalidArgumentException;
 use Reservations\Domain\Shared\Exception\InvalidPartySizeException;
 
 /**
