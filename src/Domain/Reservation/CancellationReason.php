@@ -1,17 +1,45 @@
 <?php
-// TODO: Expand to using enum-with-optional-note
-// to allow more detailed reason
+
 declare(strict_types=1);
 
 namespace Reservations\Domain\Reservation;
 
-enum CancellationReason: string
+/**
+ * Week 1: enum with optional note.
+ * A deliberate choice to not include accessor methods. No need for getters/setters.
+ */
+final class CancellationReason
 {
-    case CustomerRequest   = 'customer_request';
-    case DoubleBooked      = 'double_booked';
-    case StaffRequest      = 'staff_request';
+    private function __construct(
+        public readonly CancellationCategory $category,
+        public readonly ?string $note,
+    ) {}
+
+    public static function customerRequested(?string $note = null): self
+    {
+        return new self(CancellationCategory::CustomerRequested, $note);
+    }
+
+    public static function restaurantClosed(?string $note = null): self
+    {
+        return new self(CancellationCategory::RestaurantClosed, $note);
+    }
+
+    public static function noShow(?string $note = null): self
+    {
+        return new self(CancellationCategory::NoShow, $note);
+    }
+
+    public static function systemCleanup(?string $note = null): self
+    {
+        return new self(CancellationCategory::SystemCleanup, $note);
+    }
+}
+
+enum CancellationCategory: string
+{
+    case CustomerRequested = 'customer_requested';
     case RestaurantClosed  = 'restaurant_closed';
-    case CapacityReduced   = 'capacity_reduced';
+    case NoShow            = 'no_show';
     case SystemCleanup     = 'system_cleanup';
-    case Expired           = 'expired';
 }

@@ -42,10 +42,10 @@ use Reservations\Domain\Shared\PartySize;
 use Reservations\Domain\Shared\TimeSlot;
 use Reservations\Domain\Reservation\ReservationStatus;
 use Reservations\Domain\Reservation\CancellationReason;
+use Reservations\Domain\Reservation\Exception\InvalidReservationStateException;
 
 final class Reservation
 {
-    private ReservationStatus $status = ReservationStatus::Pending;
 
     // ──────────────────────────────────────────────────────────────
     // Construction — only via named factory, never `new` from outside
@@ -53,26 +53,56 @@ final class Reservation
     private function __construct(
         private readonly ReservationId $id,
         private readonly CustomerId $customerId,
-        private readonly TimeSlot $slot,
-        private readonly PartySize $size,
-        private readonly DateTimeImmutable $now,
+        private TimeSlot $slot,
+        private readonly PartySize $partySize,
+        private ReservationStatus $status,
+
+        // timestamp fields
+        private readonly DateTimeImmutable $createdAt,  // createdAt is set once and never changed
+        private DateTimeImmutable $updatedAt,
+        private ?DateTimeImmutable $confirmedAt = null,
+        private ?DateTimeImmutable $seatedAt = null,
+        private ?DateTimeImmutable $completedAt = null,
+        private ?DateTimeImmutable $cancelledAt = null,
+        private ?DateTimeImmutable $noShowAt = null,
     ) {}
 
     public static function request(
         ReservationId $id,
         CustomerId $customerId,
         TimeSlot $slot,
-        PartySize $size,
+        PartySize $partySize,
         DateTimeImmutable $now,
     ): self {
-        return new self($id, $customerId, $slot, $size, $now);
+        return new self(
+            id: $id,
+            customerId: $customerId,
+            slot: $slot,
+            partySize: $partySize,
+            status: ReservationStatus::Pending,
+            createdAt: $now,
+            updatedAt: $now,
+        );
     }
     // ↑ Starts in Pending status. "request" reads better than "create".
 
     // ──────────────────────────────────────────────────────────────
+    //
     // State transitions — each enforces the state machine
+    //
+    // Logic that decides whether a reservation status can be updated is done ELSEWHERE!
+    //      * Reservation class can simply UPDATE the status, not worry about the logic.
     // ──────────────────────────────────────────────────────────────
-    // public function confirm(DateTimeImmutable $now): void;
+    public function confirm(DateTimeImmutable $now): void
+    {
+        if ($this->status !== ReservationStatus::Pending) {
+            throw InvalidReservationStateException::cannotConfirmFrom($this->status);
+        }
+        $this->status = ReservationStatus::Confirmed;
+        $this->confirmedAt = $now;   // ← new fact
+        $this->updatedAt   = $now;   // ← "something changed"
+        // $this->createdAt is NEVER touched here
+    }
     // public function markSeated(DateTimeImmutable $now): void;
     // public function complete(DateTimeImmutable $now): void;
     // public function markNoShow(DateTimeImmutable $now): void;
@@ -82,14 +112,31 @@ final class Reservation
     // ──────────────────────────────────────────────────────────────
     // Queries — read-only
     // ──────────────────────────────────────────────────────────────
-    // public function id(): ReservationId;
-    // public function customerId(): CustomerId;
-    // public function timeSlot(): TimeSlot;
-    // public function partySize(): PartySize;
+    public function id(): ReservationId
+    {
+        return $this->id;
+    }
+
+    public function customerId(): CustomerId
+    {
+        return $this->customerId;
+    }
+
+    public function slot(): TimeSlot
+    {
+        return $this->slot;
+    }
+
+    public function partySize(): PartySize
+    {
+        return $this->partySize;
+    }
+
     public function status(): ReservationStatus
     {
         return $this->status;
     }
+
     // public function isCancellable(): bool;
     // public function isActive(): bool; // not in a terminal state
 }

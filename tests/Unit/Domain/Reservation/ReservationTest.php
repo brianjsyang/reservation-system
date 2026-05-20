@@ -11,6 +11,8 @@ use Reservations\Domain\Reservation\Reservation;
 use Reservations\Domain\Reservation\ReservationId;
 use Reservations\Domain\Reservation\ReservationStatus;
 use Reservations\Domain\Customer\CustomerId;
+use Reservations\Domain\Reservation\CancellationCategory;
+use Reservations\Domain\Reservation\CancellationReason;
 use Reservations\Domain\Shared\TimeSlot;
 use Reservations\Domain\Shared\PartySize;
 
@@ -55,10 +57,136 @@ final class ReservationTest extends TestCase
             id: ReservationId::generate(),
             customerId: new CustomerId('cust-1'),
             slot: TimeSlot::of(new DateTimeImmutable('2026-05-12 19:00'), 90),
-            size: new PartySize(4),
+            partySize: new PartySize(4),
             now: new DateTimeImmutable('2026-05-10 10:00'),
         );
 
         $this->assertSame(ReservationStatus::Pending, $reservation->status());
     }
+
+    // --- Reservation status transitions -----------------------------------------
+
+    public function test_terminal_states_are_identified_correctly(): void
+    {
+        $this->assertTrue(ReservationStatus::Completed->isTerminal());
+        $this->assertTrue(ReservationStatus::Cancelled->isTerminal());
+        $this->assertTrue(ReservationStatus::NoShow->isTerminal());
+
+        $this->assertFalse(ReservationStatus::Pending->isTerminal());
+        $this->assertFalse(ReservationStatus::Confirmed->isTerminal());
+        $this->assertFalse(ReservationStatus::Seated->isTerminal());
+    }
+
+
+    // --- Cancellation Reasons -----------------------------------------
+
+    public function test_customer_requested_creates_correct_category(): void
+    {
+        $reason = CancellationReason::customerRequested('kid sick');
+        $this->assertSame(CancellationCategory::CustomerRequested, $reason->category);
+        $this->assertSame('kid sick', $reason->note);
+    }
+
+    public function test_note_is_optional(): void
+    {
+        $reason = CancellationReason::customerRequested();
+        $this->assertNull($reason->note);
+    }
+
+
+    // -----------------------------------------
+    // --- Reservation Test --------------------
+    // -----------------------------------------
+    // Helpers reduce noise in every test
+    private function reservationId(): ReservationId
+    {
+        return ReservationId::generate();
+    }
+
+    private function customerId(): CustomerId
+    {
+        return CustomerId::generate();
+    }
+
+    private function slot(): TimeSlot
+    {
+        return TimeSlot::of(new DateTimeImmutable('2026-05-12 19:00'), 90);
+    }
+
+    private function partySize(int $size = 4): PartySize
+    {
+        return new PartySize($size);
+    }
+
+    private function now(): DateTimeImmutable
+    {
+        return new DateTimeImmutable('2026-05-10 10:00');
+    }
+
+    private function aPendingReservation(): Reservation
+    {
+        return Reservation::request(
+            id: $this->reservationId(),
+            customerId: $this->customerId(),
+            slot: $this->slot(),
+            partySize: $this->partySize(),
+            now: $this->now(),
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Construction
+    // ─────────────────────────────────────────────────────────
+
+    public function test_request_starts_reservation_in_pending_status(): void
+    {
+        $reservation = $this->aPendingReservation();
+
+        $this->assertSame(ReservationStatus::Pending, $reservation->status());
+    }
+
+    public function test_request_exposes_id_customer_slot_and_party_size(): void
+    {
+        $test_id = $this->reservationId();
+        $test_customer_id = $this->customerId();
+        $test_slot = $this->slot();
+        $test_party_size = $this->partySize();
+
+        $reservation = Reservation::request(
+            id: $test_id,
+            customerId: $test_customer_id,
+            slot: $test_slot,
+            partySize: $test_party_size,
+            now: $this->now(),
+        );
+
+        $this->assertSame($test_id, $reservation->id());
+        $this->assertSame($test_customer_id, $reservation->customerId());
+        $this->assertSame($test_slot, $reservation->slot());
+        $this->assertSame($test_party_size, $reservation->partySize());
+    }
+
+    public function test_confirm_transitions_pending_to_confirm(): void
+    {
+        // ARRANGE
+        $reservation = $this->aPendingReservation();
+
+        // ACT
+        $reservation->confirm($this->now());
+
+        // ASSERT
+        // Worth noting: previous test already confirms that all newly created reservations start in pending status
+        $this->assertSame(ReservationStatus::Confirmed, $reservation->status());
+    }
+
+    /**
+     * Test to write...
+     * test_confirm_records_confirmation_time — drives the confirmedAt field
+     * test_confirm_throws_when_already_confirmed — drives the state machine check
+     * test_confirm_throws_when_cancelled — same guard, different path
+     * test_cancel_transitions_pending_to_cancelled — drives cancel()
+     * test_cancel_records_reason_and_time
+     * test_cancel_throws_when_already_cancelled
+     * test_cancel_throws_when_seated
+     */
 }
