@@ -1,5 +1,6 @@
 <?php
-// Why not use strict type in this file?
+
+declare(strict_types=1);
 
 namespace Reservations\Domain\Shared\Exception;
 

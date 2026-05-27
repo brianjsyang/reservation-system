@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Reservations\Domain\Shared\TimeSlot;
+namespace Reservations\Domain\Shared;
 
 final class BusinessHours
 {

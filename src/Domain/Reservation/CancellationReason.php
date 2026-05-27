@@ -25,21 +25,8 @@ final class CancellationReason
         return new self(CancellationCategory::RestaurantClosed, $note);
     }
 
-    public static function noShow(?string $note = null): self
-    {
-        return new self(CancellationCategory::NoShow, $note);
-    }
-
     public static function systemCleanup(?string $note = null): self
     {
         return new self(CancellationCategory::SystemCleanup, $note);
     }
-}
-
-enum CancellationCategory: string
-{
-    case CustomerRequested = 'customer_requested';
-    case RestaurantClosed  = 'restaurant_closed';
-    case NoShow            = 'no_show';
-    case SystemCleanup     = 'system_cleanup';
 }

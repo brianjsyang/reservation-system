@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Reservations\Domain\Shared;
 
-use BusinessHours;
 use DateTimeImmutable;
 use Reservations\Domain\Shared\Exception\InvalidTimeSlotException;
 

@@ -10,20 +10,19 @@ use Reservations\Domain\Customer\Exception\InvalidCustomerIdException;
 
 final class CustomerId
 {
-    public function __construct(private readonly string $value) {}
+    private function __construct(private readonly string $value) {}
 
-    // Named constructor to generate a new UUID-based ReservationId
     public static function generate(): self
     {
+        // Generate a fresh UUID for a new CustomerId
         return new self(Uuid::uuid4()->toString());
     }
 
-    // Named constructor to create a ReservationId from a string
-    // Used for rehydrating from a string value (e.g., from a database)
     public static function fromString(string $value): self
     {
+        // Rehydrate from DB/input
         if (!Uuid::isValid($value)) {
-            throw InvalidCustomerIdException::notAvailableUuid();
+            throw InvalidCustomerIdException::notAvailableUuid($value);
         }
         return new self($value);
     }

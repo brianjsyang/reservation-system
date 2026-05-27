@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Reservations\Tests\Unit\Domain\Reservation;
+namespace Tests\Unit\Domain\Reservation;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -55,7 +55,7 @@ final class ReservationTest extends TestCase
     {
         $reservation = Reservation::request(
             id: ReservationId::generate(),
-            customerId: new CustomerId('cust-1'),
+            customerId: CustomerId::generate(),
             slot: TimeSlot::of(new DateTimeImmutable('2026-05-12 19:00'), 90),
             partySize: new PartySize(4),
             now: new DateTimeImmutable('2026-05-10 10:00'),

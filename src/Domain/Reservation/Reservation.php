@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  *
  * Aggregate root for everything reservation-related.
@@ -30,8 +32,6 @@
    Reschedule transitions (from Pending or Confirmed):
          Pending/Confirmed ──reschedule(newSlot)──▶ same status, new slot
  */
-
-declare(strict_types=1);
 
 namespace Reservations\Domain\Reservation;
 
@@ -135,6 +135,41 @@ final class Reservation
     public function status(): ReservationStatus
     {
         return $this->status;
+    }
+
+    public function createdAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function updatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function confirmedAt(): ?DateTimeImmutable
+    {
+        return $this->confirmedAt;
+    }
+
+    public function seatedAt(): ?DateTimeImmutable
+    {
+        return $this->seatedAt;
+    }
+
+    public function completedAt(): ?DateTimeImmutable
+    {
+        return $this->completedAt;
+    }
+
+    public function cancelledAt(): ?DateTimeImmutable
+    {
+        return $this->cancelledAt;
+    }
+
+    public function noShowAt(): ?DateTimeImmutable
+    {
+        return $this->noShowAt;
     }
 
     // public function isCancellable(): bool;

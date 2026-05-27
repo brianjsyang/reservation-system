@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Reservations\Domain\Customer\CustomerId;
 use Reservations\Domain\Customer\Exception\InvalidCustomerIdException;
 
-class CustomerTest extends TestCase
+class CustomerIdTest extends TestCase
 {
     // --- Construction & invariants -----------------------------------------
 
