@@ -87,6 +87,10 @@ final class ReservationTest extends TestCase
         $this->assertSame($test_party_size, $reservation->partySize());
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Confirm
+    // ─────────────────────────────────────────────────────────
+
     public function test_confirm_transitions_pending_to_confirm(): void
     {
         // ARRANGE
@@ -97,6 +101,53 @@ final class ReservationTest extends TestCase
 
         // ASSERT
         $this->assertSame(ReservationStatus::Confirmed, $reservation->status());
+    }
+
+    public function test_pending_reservation_has_no_confirmedAt(): void
+    {
+        // ARRANGE
+        $reservation = $this->aPendingReservation();
+
+        // ASSERT
+        $this->assertNull($reservation->confirmedAt());
+    }
+
+    public function test_confirm_records_the_confirmation_time(): void
+    {
+        // ARRANGE
+        $reservation = $this->aPendingReservation();
+
+        // ACT
+        $reservation->confirm($this->now());
+
+        // ASSERT
+        $this->assertEquals($this->now(), $reservation->confirmedAt());
+    }
+
+    public function test_confirm_does_not_change_createdAt(): void
+    {
+        // ARRANGE
+        $reservation = $this->aPendingReservation();
+        $createdAt = $reservation->createdAt();
+
+        // ACT
+        $reservation->confirm($this->now());
+
+        // ASSERT
+        $this->assertEquals($createdAt, $reservation->createdAt());
+    }
+
+    public function test_confirm_updates_updatedAt(): void
+    {
+        // ARRANGE
+        $reservation = $this->aPendingReservation();
+        $updatedAt = $reservation->updatedAt();
+
+        // ACT - confirm with a different timestamp to ensure updatedAt changes
+        $reservation->confirm(new DateTimeImmutable('2026-05-11 10:00'));
+
+        // ASSERT
+        $this->assertNotEquals($updatedAt, $reservation->updatedAt());
     }
 
     /**
